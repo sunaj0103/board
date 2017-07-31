@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+          PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+          "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="board">
+	<insert id="insertBoard" parameterType="com.kosmo.web.board.dto.BoardDto">
+		INSERT INTO board_tbl VALUES(board_tbl_sq.nextVal,#{name},#{subject},#{content},0,sysdate,sysdate,board_tbl_sq.currVal,0,0)
+	</insert>
+	<select id="recordCount" resultType="int">
+		SELECT COUNT(b_num) FROM board_tbl
+	</select>
+	<select id="recordSearchCount" parameterType="map" resultType="int">
+		SELECT COUNT(b_num) FROM board_tbl
+		<include refid="search"></include>
+	</select>
+	<select id="selectAllList" parameterType="com.kosmo.web.board.dto.BoardPagingDto" resultType="com.kosmo.web.board.dto.BoardDto">
+		<![CDATA[
+		SELECT * 
+		FROM (SELECT * 
+			FROM (SELECT b_num,name,subject,content,hit,TO_CHAR(write_date,'YY-MM-DD') write_date,modified_date,ref,step,lvl 
+				FROM board_tbl n 
+				ORDER BY ref DESC, step ASC) 
+			WHERE ROWNUM<=#{rownumEnd} ORDER BY ref ASC, step DESC)			
+		WHERE ROWNUM<=#{lastPageRecord} ORDER BY ref DESC, step ASC
+		]]>
+	</select>	
+	<select id="selectSearchList" parameterType="map" resultType="com.kosmo.web.board.dto.BoardDto">
+		<![CDATA[
+		SELECT * 
+		FROM (SELECT * 
+			FROM (SELECT b_num,name,subject,content,hit,TO_CHAR(write_date,'YY-MM-DD') write_date,modified_date,ref,step,lvl 
+				FROM board_tbl n 
+				]]>
+				<include refid="search"></include>
+				<![CDATA[			
+				ORDER BY ref DESC, step ASC) 
+			WHERE ROWNUM<=#{pageDto.rownumEnd} ORDER BY ref ASC, step DESC)			
+		WHERE ROWNUM<=#{pageDto.lastPageRecord} ORDER BY ref DESC, step ASC
+		]]>
+	</select>
+	
+	<sql id="search">
+	    <choose>
+	        <!-- 검색옵션이 전체 검색일 경우 -->
+	        <when test="searchOption == 'all'">
+	            WHERE name like '%'||#{keyword}||'%'
+	            OR subject like '%'||#{keyword}||'%'
+	            OR content like '%'||#{keyword}||'%'
+	        </when>
+	        <!-- 전체 검색이 아닐 경우 -->
+	        <otherwise>
+	            WHERE ${searchOption} like '%'||#{keyword}||'%'
+	        </otherwise>
+	    </choose>
+	</sql>
+	
+	<select id="listAllExcel" resultType="com.kosmo.web.board.dto.BoardDto">
+		SELECT b_num,name,subject,content,hit,TO_CHAR(write_date,'YY-MM-DD') write_date,modified_date,ref,step,lvl 
+		FROM board_tbl ORDER BY ref DESC, step ASC
+	</select>
+	
+	<update id="boardHitCount" parameterType="int">
+		UPDATE board_tbl SET hit=hit+1 WHERE b_num=#{b_num}
+	</update>
+	<select id="selectBoard" resultType="com.kosmo.web.board.dto.BoardDto">
+		SELECT b_num,name,subject,content,hit,write_date,modified_date,ref,step,lvl 
+		FROM board_tbl WHERE b_num=#{b_num}
+	</select>
+	<update id="updateBoard" parameterType="com.kosmo.web.board.dto.BoardDto">
+		UPDATE board_tbl SET subject=#{subject},content=#{content},modified_date=sysdate 
+		WHERE b_num=#{b_num}
+	</update>
+	
+	<select id="selectRef" resultType="com.kosmo.web.board.dto.BoardDto">
+		SELECT ref,step,lvl FROM board_tbl WHERE b_num=#{b_num}
+	</select>
+	<update id="updateReplyBoard" parameterType="com.kosmo.web.board.dto.BoardDto">
+		UPDATE board_tbl SET step = step+1 WHERE ref=#{ref} AND step>#{step} 
+	</update>
+	<insert id="insertReplyBoard" parameterType="com.kosmo.web.board.dto.BoardDto">
+		INSERT INTO board_tbl VALUES(board_tbl_sq.nextVal,#{name},#{subject},#{content},0,sysdate,sysdate,#{ref},#{step},#{lvl})
+	</insert>
+	<update id="updateDelBoard" parameterType="int">
+		UPDATE board_tbl SET subject='삭제된 글입니다.', name='-', content='-' WHERE b_num=#{b_num}
+	</update>
+	<select id="countRef" parameterType="int" resultType="int">
+		SELECT COUNT(b_num) FROM board_tbl WHERE ref=#{b_num}
+	</select>
+	<select id="countReRef" parameterType="map" resultType="int">
+		SELECT COUNT(b_num) FROM board_tbl WHERE ref=#{ref} AND lvl>#{lvl}
+	</select>
+	<delete id="deleteBoard" parameterType="int">
+		DELETE FROM board_tbl WHERE b_num=#{b_num}
+	</delete>
+	
+</mapper>

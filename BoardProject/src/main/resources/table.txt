@@ -1,0 +1,42 @@
+-- board
+CREATE TABLE BOARD
+  (
+    b_num             INTEGER NOT NULL,
+    name              VARCHAR2 (10 CHAR) NOT NULL ,
+    subject           VARCHAR2 (100 CHAR) NOT NULL,
+    content           CLOB NOT NULL,
+    hit               INTEGER NOT NULL, 
+    write_date        DATE NOT NULL,
+    modified_date     DATE NOT NULL
+  );
+ALTER TABLE BOARD ADD CONSTRAINT BOARD_PK PRIMARY KEY ( b_num ) ;
+
+create sequence BOARD_sq
+start with 1
+increment by 1;
+
+-- update
+CREATE TABLE BOARD_TBL
+  (
+    b_num             INTEGER NOT NULL,
+    name              VARCHAR2 (10 CHAR) NOT NULL ,
+    subject           VARCHAR2 (100 CHAR) NOT NULL,
+    content           CLOB NOT NULL,
+    hit               INTEGER NOT NULL, 
+    write_date        DATE NOT NULL,
+    modified_date     DATE NOT NULL,
+    ref               INTEGER NOT NULL ,
+    step              INTEGER default 0,
+    lvl               INTEGER default 0
+  );
+ALTER TABLE BOARD_TBL ADD CONSTRAINT BOARD_TBL_PK PRIMARY KEY ( b_num ) ;
+
+create sequence BOARD_TBL_sq
+start with 1
+increment by 1;
+
+-- ref -- 댓글 번호
+-- step -- 순서
+
+ALTER TABLE BOARD_TBL MODIFY (name VARCHAR2(50 CHAR));
+
